@@ -24,7 +24,6 @@ public class FlightSearch {
     private static final List<String> ALLOWED_CLASSES =
             List.of("economy", "premium economy", "business", "first");
 
-
     private static final DateTimeFormatter STRICT_DDMMYYYY =
             DateTimeFormatter.ofPattern("dd/MM/uuuu").withResolverStyle(ResolverStyle.STRICT);
 
@@ -41,6 +40,11 @@ public class FlightSearch {
         String dstCode = returnLowerCase(destinationAirportCode);
         String seatClass = returnLowerCase(seatingClass);
 
+        // Condition 1: Child/infant counts cannot be negative as in the announcement.
+        if (childPassengerCount < 0 || infantPassengerCount < 0) {
+            return false;
+        }
+
         // Condition 1: Total passenger count validation.
         int passengerCount = adultPassengerCount + childPassengerCount + infantPassengerCount;
         if (passengerCount < 1 || passengerCount > 9) {
@@ -52,7 +56,7 @@ public class FlightSearch {
             return false;
         }
 
-        // Condition 11: Airport codes validation
+        // Condition 11: Airport codes validation (and cannot be the same).
         if (!ALLOWED_AIRPORTS.contains(depCode) || !ALLOWED_AIRPORTS.contains(dstCode)) {
             return false;
         }
@@ -64,8 +68,8 @@ public class FlightSearch {
         LocalDate dep;
         LocalDate ret;
         try {
-            dep = LocalDate.parse(depDate, STRICT_DDMMYYYY);   // Condition 7: Strict format & valid date.
-            ret = LocalDate.parse(retDate, STRICT_DDMMYYYY);   // Condition 7: Strict format & valid date.
+            dep = LocalDate.parse(depDate, STRICT_DDMMYYYY);   // C7: strict format & valid date
+            ret = LocalDate.parse(retDate, STRICT_DDMMYYYY);   // C7: strict format & valid date
         } catch (Exception e) {
             return false;
         }
@@ -75,41 +79,39 @@ public class FlightSearch {
             return false;
         }
 
-        // Condition 8: Two-way only, return must be after departure (not equal/before).
+        // Condition 8: Two-way only, return must be AFTER departure (not equal/before).
         if (!ret.isAfter(dep)) {
             return false;
         }
 
-        // Condition 10: Only economy can be emergency-row.
+        // Condition 10 (clarified wording): Only *economy seating* can have an emergency row.
         if (emergencyRowSeating && !seatClass.equals("economy")) {
             return false;
         }
 
-        // Condition 2: Children restrictions.
-        // Children cannot be seated in emergency row seating OR first class.
+        // Condition 2: Children restrictions (no children in emergency row OR first class).
         if ((emergencyRowSeating && childPassengerCount > 0) ||
                 (seatClass.equals("first") && childPassengerCount > 0)) {
             return false;
         }
 
-        // Condition 3: Infants restrictions.
-        // Infants cannot be seated in emergency row seating OR business class.
+        // Condition 3: Infants restrictions (no infants in emergency row OR business class).
         if ((emergencyRowSeating && infantPassengerCount > 0) ||
                 (seatClass.equals("business") && infantPassengerCount > 0)) {
             return false;
         }
 
-        // Condition 4: Children adjacency (≤ 2 children per adult)
+        // Condition 4: Children adjacency (≤ 2 children per adult).
         if (childPassengerCount > adultPassengerCount * 2) {
             return false;
         }
 
-        // Condition 5: Infants on lap (≤ 1 infant per adult)
+        // Condition 5: Infants on lap (≤ 1 infant per adult).
         if (infantPassengerCount > adultPassengerCount) {
             return false;
         }
 
-        // When all validations passed, this method initializes attributes & return true.
+        // All validations passed → initialize attributes (Note 7: only here) and return true.
         this.departureDate = depDate;
         this.departureAirportCode = depCode;
         this.emergencyRowSeating = emergencyRowSeating;
