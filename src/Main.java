@@ -15,6 +15,7 @@ public class Main {
         );
 
         if (result) {
+            // Displaying flight info when all the input parameters are valid.
             System.out.println("Flight search successful!\n" +
                     "Departure: " + search.getDepartureAirportCode() + " on " + search.getDepartureDate() + "\n" + "Destination: " + search.getDestinationAirportCode() + " | Return: " + search.getReturnDate() + "\n" + "Class: " + search.getSeatingClass() + " | Emergency Row: " + search.isEmergencyRowSeating() + "\n" +
                     "Passengers - Adults: " + search.getAdultPassengerCount() +
